@@ -191,27 +191,37 @@ void Dsmr::receive_encrypted_telegram_() {
   while (this->available_within_timeout_()) {
     const char c = this->read();
 
-    // Find a new telegram start byte.
-    if (!this->header_found_) {
-      if ((uint8_t) c != 0xDB) {
-        continue;
-      }
-      ESP_LOGV(TAG, "Start byte 0xDB of encrypted telegram found");
+    //loguj kazdy znak
+    ESP_LOGV(TAG, "Byte read: 0x%x", c);
+
+    //check if encryption flag exists
+    if ((uint8_t) c == 0xDB) {
+         ESP_LOGV(TAG, "Start byte 0xDB of encrypted telegram found");
+       }
+
+    //check for header, jak znajdzie to nastepny znak w kolejnej iteracji
+    if (c == '/') {
+      ESP_LOGV(TAG, "Header of telegram found");
       this->reset_telegram_();
       this->header_found_ = true;
     }
+    if (!this->header_found_)
+      continue;
 
+    //jesli przeczytal wiecej znakow niz deklarowany telegram to przerwij z bledem
     // Check for buffer overflow.
     if (this->crypt_bytes_read_ >= this->max_telegram_len_) {
       this->reset_telegram_();
-      ESP_LOGE(TAG, "Error: encrypted telegram larger than buffer (%d bytes)", this->max_telegram_len_);
+      ESP_LOGE(TAG, "Error: encrypted telegram larger (%d) than buffer (%d bytes)",this->crypt_bytes_read_, this->max_telegram_len_);
       return;
     }
 
+    // zapisz znak do tablicy
     // Store the byte in the buffer.
     this->crypt_telegram_[this->crypt_bytes_read_] = c;
     this->crypt_bytes_read_++;
 
+    //jesli przeczytal wicej niz 20 znakow i nie policzyl jeszcze dlugosci ramki to ja policz
     // Read the length of the incoming encrypted telegram.
     if (this->crypt_telegram_len_ == 0 && this->crypt_bytes_read_ > 20) {
       // Complete header + data bytes
@@ -219,10 +229,16 @@ void Dsmr::receive_encrypted_telegram_() {
       ESP_LOGV(TAG, "Encrypted telegram length: %d bytes", this->crypt_telegram_len_);
     }
 
+    // jesli nie policzyl jeszcze dlugosci ramki 
+    // lub
+    // jesli ilosc odebranych znakow jest rozna od oblicznoej dlugosci bramki
+    // to kolejna iteracja petli
     // Check for the end of the encrypted telegram.
     if (this->crypt_telegram_len_ == 0 || this->crypt_bytes_read_ != this->crypt_telegram_len_) {
       continue;
     }
+
+    //jesli dotarl do tego momentu to ma cala ramke
     ESP_LOGV(TAG, "End of encrypted telegram found");
 
     // Decrypt the encrypted telegram.
