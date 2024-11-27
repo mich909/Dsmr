@@ -229,6 +229,7 @@ void my_Dsmr::receive_encrypted_telegram_() {
       ESP_LOGV(TAG, "Encrypted telegram length: %d bytes", this->crypt_telegram_len_);
       if (this->crypt_telegram_len_ > 10000)
       {
+        ESP_LOGV(TAG, "telegram too long: %d bytes, reseting telegram", this->crypt_telegram_len_);
         this->reset_telegram_();
       }
     }
