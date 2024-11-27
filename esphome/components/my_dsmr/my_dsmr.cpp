@@ -187,6 +187,17 @@ void my_Dsmr::receive_telegram_() {
   }
 }
 
+void my_Dsmr::log_telegram()
+{
+  char telegram[3000]={0};
+  for (int i = 0; i < this->crypt_bytes_read_; i++)
+  {
+    telegram[i]=this->crypt_telegram_[i];
+   // telegram[2*i+1] = 
+  }
+  ESP_LOGV(TAG, "Telegram text: %x",telegram);
+}
+
 void my_Dsmr::receive_encrypted_telegram_() {
   while (this->available_within_timeout_()) {
     const char c = this->read();
@@ -202,10 +213,20 @@ void my_Dsmr::receive_encrypted_telegram_() {
     //check for header, jak znajdzie to nastepny znak w kolejnej iteracji
     if (c == '/') {
       ESP_LOGV(TAG, "Header of telegram found");
-      this->reset_telegram_();
+      //this->reset_telegram_();
       this->header_found_ = true;
     }
     if (!this->header_found_)
+      continue;
+
+    //znajdz drugi znak naglowka  
+    if (c=='E' && this->header_found_)
+    {
+      ESP_LOGV(TAG, "Header 2nd part of telegram found");
+      //this->reset_telegram_();
+      this->header_2nd_found_ = true;
+    }
+    if (!this->header_2nd_found_)
       continue;
 
     //jesli przeczytal wiecej znakow niz deklarowany telegram to przerwij z bledem
@@ -230,6 +251,8 @@ void my_Dsmr::receive_encrypted_telegram_() {
       if (this->crypt_telegram_len_ > 10000)
       {
         ESP_LOGV(TAG, "telegram too long: %d bytes, reseting telegram", this->crypt_telegram_len_);
+        //log whole telegram
+        log_telegram();
         this->reset_telegram_();
       }
     }

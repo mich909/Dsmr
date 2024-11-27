@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef USE_ARDUINO
+//#ifdef USE_ARDUINO
 
 #include "esphome/core/component.h"
 #include "esphome/components/sensor/sensor.h"
@@ -92,6 +92,7 @@ class my_Dsmr : public Component, public uart::UARTDevice {
   void receive_telegram_();
   void receive_encrypted_telegram_();
   void reset_telegram_();
+  void log_telegram();
 
   /// Wait for UART data to become available within the read timeout.
   ///
@@ -125,6 +126,7 @@ class my_Dsmr : public Component, public uart::UARTDevice {
   size_t crypt_bytes_read_{0};
   uint32_t last_read_time_{0};
   bool header_found_{false};
+  bool header_2nd_found_{false};
   bool footer_found_{false};
 
   // handled outside dsmr
@@ -143,4 +145,4 @@ class my_Dsmr : public Component, public uart::UARTDevice {
 }  // namespace dsmr
 }  // namespace esphome
 
-#endif  // USE_ARDUINO
+//#endif  // USE_ARDUINO
