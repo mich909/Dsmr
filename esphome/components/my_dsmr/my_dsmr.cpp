@@ -203,7 +203,7 @@ void my_Dsmr::receive_encrypted_telegram_() {
     const char c = this->read();
 
     //loguj kazdy znak
-    ESP_LOGV(TAG, "Byte read: 0x%x", c);
+    //ESP_LOGV(TAG, "Byte read: 0x%x", c);
 
     //check if encryption flag exists
     if ((uint8_t) c == 0xDB) {
@@ -243,6 +243,10 @@ void my_Dsmr::receive_encrypted_telegram_() {
       if (this->crypt_telegram_len_ > 10000)
       {
         ESP_LOGV(TAG, "telegram too long: %d bytes, reseting telegram", this->crypt_telegram_len_);
+        for(int i = 0; i< this->crypt_bytes_read_; i++)
+        {
+          ESP_LOGV(TAG, "telegram byte %d: %x", i, this->crypt_telegram_[i]);
+        }
         //log whole telegram
         //log_telegram();
         this->reset_telegram_();
