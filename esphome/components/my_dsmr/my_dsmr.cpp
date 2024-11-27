@@ -273,8 +273,8 @@ bool my_Dsmr::parse_telegram() {
   ESP_LOGV(TAG, "Trying to parse telegram");
   this->stop_requesting_data_();
 
-  ::my_dsmr::ParseResult<void> res =
-      ::my_dsmr::P1Parser::parse(&data, this->telegram_, this->bytes_read_, false,
+  ::dsmr::ParseResult<void> res =
+      ::dsmr::P1Parser::parse(&data, this->telegram_, this->bytes_read_, false,
                               this->crc_check_);  // Parse telegram according to data definition. Ignore unknown values.
   if (res.err) {
     // Parsing error, show it
