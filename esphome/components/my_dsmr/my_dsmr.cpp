@@ -1,4 +1,4 @@
-//#ifdef USE_ARDUINO
+#ifdef USE_ARDUINO
 
 #include "my_dsmr.h"
 #include "esphome/core/log.h"
