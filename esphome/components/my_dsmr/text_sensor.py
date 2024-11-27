@@ -30,7 +30,7 @@ CONFIG_SCHEMA = cv.Schema(
 
 
 async def to_code(config):
-    hub = await cg.get_variable(config[CONF_DSMR_ID])
+    hub = await cg.get_variable(config[CONF_MY_DSMR_ID])
 
     text_sensors = []
     for key, conf in config.items():
