@@ -219,15 +219,7 @@ void my_Dsmr::receive_encrypted_telegram_() {
     if (!this->header_found_)
       continue;
 
-    //znajdz drugi znak naglowka  
-    if (c=='E' && this->header_found_)
-    {
-      ESP_LOGV(TAG, "Header 2nd part of telegram found");
-      //this->reset_telegram_();
-      this->header_2nd_found_ = true;
-    }
-    if (!this->header_2nd_found_)
-      continue;
+  
 
     //jesli przeczytal wiecej znakow niz deklarowany telegram to przerwij z bledem
     // Check for buffer overflow.
