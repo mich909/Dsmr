@@ -240,17 +240,17 @@ void my_Dsmr::receive_encrypted_telegram_() {
       // Complete header + data bytes
       this->crypt_telegram_len_ = 13 + (this->crypt_telegram_[11] << 8 | this->crypt_telegram_[12]);
       ESP_LOGV(TAG, "Encrypted telegram length: %d bytes", this->crypt_telegram_len_);
-      if (this->crypt_telegram_len_ > 10000)
-      {
-        ESP_LOGV(TAG, "telegram too long: %d bytes, reseting telegram", this->crypt_telegram_len_);
-        for(int i = 0; i< this->crypt_bytes_read_; i++)
-        {
-          ESP_LOGV(TAG, "telegram byte %d: %x", i, this->crypt_telegram_[i]);
-        }
-        //log whole telegram
-        //log_telegram();
-        this->reset_telegram_();
-      }
+      // if (this->crypt_telegram_len_ > 10000)
+      // {
+      //   ESP_LOGV(TAG, "telegram too long: %d bytes, reseting telegram", this->crypt_telegram_len_);
+      //   for(int i = 0; i< this->crypt_bytes_read_; i++)
+      //   {
+      //     ESP_LOGV(TAG, "telegram byte %d: %x", i, this->crypt_telegram_[i]);
+      //   }
+      //   //log whole telegram
+      //   //log_telegram();
+      //   this->reset_telegram_();
+      // }
     }
 
     // jesli nie policzyl jeszcze dlugosci ramki 
