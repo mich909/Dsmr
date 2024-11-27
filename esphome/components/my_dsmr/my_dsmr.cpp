@@ -1,4 +1,4 @@
-#ifdef USE_ARDUINO
+//#ifdef USE_ARDUINO
 
 #include "my_dsmr.h"
 #include "esphome/core/log.h"
@@ -192,7 +192,7 @@ void my_Dsmr::receive_encrypted_telegram_() {
     const char c = this->read();
 
     //loguj kazdy znak
-    ESP_LOGV(TAG, "Byte read: 0x%x", c);
+   // ESP_LOGV(TAG, "Byte read: 0x%x", c);
 
     //check if encryption flag exists
     if ((uint8_t) c == 0xDB) {
@@ -346,4 +346,4 @@ void my_Dsmr::set_decryption_key(const std::string &decryption_key) {
 }  // namespace my_dsmr
 }  // namespace esphome
 
-#endif  // USE_ARDUINO
+//#endif  // USE_ARDUINO
