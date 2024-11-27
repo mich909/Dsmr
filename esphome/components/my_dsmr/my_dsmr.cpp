@@ -195,7 +195,7 @@ void my_Dsmr::log_telegram()
     telegram[i]=this->crypt_telegram_[i];
    // telegram[2*i+1] = 
   }
-  ESP_LOGV(TAG, "Telegram text: %x",telegram);
+ // ESP_LOGV(TAG, "Telegram text: %x",telegram);
 }
 
 void my_Dsmr::receive_encrypted_telegram_() {
