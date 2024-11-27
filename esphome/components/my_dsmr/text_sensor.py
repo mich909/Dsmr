@@ -2,13 +2,13 @@ import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import text_sensor
 from esphome.const import CONF_INTERNAL
-from . import Dsmr, CONF_DSMR_ID
+from . import my_Dsmr, CONF_MY_DSMR_ID
 
 AUTO_LOAD = ["my_dsmr"]
 
 CONFIG_SCHEMA = cv.Schema(
     {
-        cv.GenerateID(CONF_DSMR_ID): cv.use_id(Dsmr),
+        cv.GenerateID(CONF_MY_DSMR_ID): cv.use_id(my_Dsmr),
         cv.Optional("identification"): text_sensor.text_sensor_schema(),
         cv.Optional("p1_version"): text_sensor.text_sensor_schema(),
         cv.Optional("p1_version_be"): text_sensor.text_sensor_schema(),
