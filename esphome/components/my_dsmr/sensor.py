@@ -19,14 +19,14 @@ from esphome.const import (
     UNIT_KILOVOLT_AMPS_REACTIVE,
     UNIT_VOLT,
 )
-from . import Dsmr, CONF_DSMR_ID
+from . import my_Dsmr, CONF_DSMR_ID
 
-AUTO_LOAD = ["dsmr"]
+AUTO_LOAD = ["my_dsmr"]
 
 
 CONFIG_SCHEMA = cv.Schema(
     {
-        cv.GenerateID(CONF_DSMR_ID): cv.use_id(Dsmr),
+        cv.GenerateID(CONF_DSMR_ID): cv.use_id(my_Dsmr),
         cv.Optional("energy_delivered_lux"): sensor.sensor_schema(
             unit_of_measurement=UNIT_KILOWATT_HOURS,
             accuracy_decimals=3,

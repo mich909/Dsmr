@@ -4,7 +4,7 @@ from esphome.components import text_sensor
 from esphome.const import CONF_INTERNAL
 from . import Dsmr, CONF_DSMR_ID
 
-AUTO_LOAD = ["dsmr"]
+AUTO_LOAD = ["my_dsmr"]
 
 CONFIG_SCHEMA = cv.Schema(
     {

@@ -17,7 +17,7 @@ AUTO_LOAD = ["sensor", "text_sensor"]
 
 CONF_CRC_CHECK = "crc_check"
 CONF_DECRYPTION_KEY = "decryption_key"
-CONF_DSMR_ID = "dsmr_id"
+CONF_MY_DSMR_ID = "my_dsmr_id"
 CONF_GAS_MBUS_ID = "gas_mbus_id"
 CONF_WATER_MBUS_ID = "water_mbus_id"
 CONF_MAX_TELEGRAM_LENGTH = "max_telegram_length"
@@ -25,8 +25,8 @@ CONF_REQUEST_INTERVAL = "request_interval"
 CONF_REQUEST_PIN = "request_pin"
 
 # Hack to prevent compile error due to ambiguity with lib namespace
-dsmr_ns = cg.esphome_ns.namespace("esphome::dsmr")
-Dsmr = dsmr_ns.class_("Dsmr", cg.Component, uart.UARTDevice)
+my_dsmr_ns = cg.esphome_ns.namespace("esphome::my_dsmr")
+my_Dsmr = my_dsmr_ns.class_("my_Dsmr", cg.Component, uart.UARTDevice)
 
 
 def _validate_key(value):
@@ -50,7 +50,7 @@ def _validate_key(value):
 CONFIG_SCHEMA = cv.All(
     cv.Schema(
         {
-            cv.GenerateID(): cv.declare_id(Dsmr),
+            cv.GenerateID(): cv.declare_id(my_Dsmr),
             cv.Optional(CONF_DECRYPTION_KEY): _validate_key,
             cv.Optional(CONF_CRC_CHECK, default=True): cv.boolean,
             cv.Optional(CONF_GAS_MBUS_ID, default=1): cv.int_,
