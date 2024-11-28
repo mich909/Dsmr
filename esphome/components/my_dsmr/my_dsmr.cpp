@@ -199,7 +199,7 @@ void my_Dsmr::log_telegram()
 }
 
 void my_Dsmr::receive_encrypted_telegram_() {
-  this->reset_telegram_();
+  //this->reset_telegram_();
   while (this->available_within_timeout_()) 
   {
     const char c = this->read();
