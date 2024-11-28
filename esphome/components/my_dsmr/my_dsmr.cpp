@@ -244,6 +244,21 @@ void my_Dsmr::receive_encrypted_telegram_() {
     //   // Complete header + data bytes
        this->crypt_telegram_len_ = (this->crypt_telegram_[14] << 8 | this->crypt_telegram_[15]);
        ESP_LOGV(TAG, "Encrypted telegram length: %d bytes", this->crypt_telegram_len_);
+       
+       ESP_LOGV(TAG, "byte 0#: %x ", this->crypt_telegram_[0]);
+       ESP_LOGV(TAG, "byte 1#: %x ", this->crypt_telegram_[1]);
+       ESP_LOGV(TAG, "byte 2#: %x ", this->crypt_telegram_[2]);
+       ESP_LOGV(TAG, "byte 3#: %x ", this->crypt_telegram_[3]);
+       ESP_LOGV(TAG, "byte 4#: %x ", this->crypt_telegram_[4]);
+       ESP_LOGV(TAG, "byte 5#: %x ", this->crypt_telegram_[5]);
+       ESP_LOGV(TAG, "byte 6#: %x ", this->crypt_telegram_[6]);
+       ESP_LOGV(TAG, "byte 7#: %x ", this->crypt_telegram_[7]);
+       ESP_LOGV(TAG, "byte 8#: %x ", this->crypt_telegram_[8]);
+       ESP_LOGV(TAG, "byte 9#: %x ", this->crypt_telegram_[9]);
+       ESP_LOGV(TAG, "byte 10#: %x ", this->crypt_telegram_[10]);
+       ESP_LOGV(TAG, "byte 11#: %x ", this->crypt_telegram_[11]);
+       ESP_LOGV(TAG, "byte 12#: %x ", this->crypt_telegram_[12]);
+       ESP_LOGV(TAG, "byte 13#: %x ", this->crypt_telegram_[13]);
        ESP_LOGV(TAG, "byte 14#: %x ", this->crypt_telegram_[14]);
        ESP_LOGV(TAG, "byte 15#: %x ", this->crypt_telegram_[15]);
     //   // if (this->crypt_telegram_len_ > 10000)
