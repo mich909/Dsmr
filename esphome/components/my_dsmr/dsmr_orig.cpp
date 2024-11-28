@@ -1,6 +1,6 @@
-//#ifdef USE_ARDUINO
 
-#include "my_dsmr.h"
+
+#include "dsmr.h"
 #include "esphome/core/log.h"
 
 #include <AES.h>
@@ -8,18 +8,18 @@
 #include <GCM.h>
 
 namespace esphome {
-namespace my_dsmr {
+namespace dsmr {
 
-static const char *const TAG = "my_dsmr";
+static const char *const TAG = "dsmr";
 
-void my_Dsmr::setup() {
+void Dsmr::setup() {
   this->telegram_ = new char[this->max_telegram_len_];  // NOLINT
   if (this->request_pin_ != nullptr) {
     this->request_pin_->setup();
   }
 }
 
-void my_Dsmr::loop() {
+void Dsmr::loop() {
   if (this->ready_to_request_data_()) {
     if (this->decryption_key_.empty()) {
       this->receive_telegram_();
@@ -29,7 +29,7 @@ void my_Dsmr::loop() {
   }
 }
 
-bool my_Dsmr::ready_to_request_data_() {
+bool Dsmr::ready_to_request_data_() {
   // When using a request pin, then wait for the next request interval.
   if (this->request_pin_ != nullptr) {
     if (!this->requesting_data_ && this->request_interval_reached_()) {
@@ -50,16 +50,16 @@ bool my_Dsmr::ready_to_request_data_() {
   return this->requesting_data_;
 }
 
-bool my_Dsmr::request_interval_reached_() {
+bool Dsmr::request_interval_reached_() {
   if (this->last_request_time_ == 0) {
     return true;
   }
   return millis() - this->last_request_time_ > this->request_interval_;
 }
 
-bool my_Dsmr::receive_timeout_reached_() { return millis() - this->last_read_time_ > this->receive_timeout_; }
+bool Dsmr::receive_timeout_reached_() { return millis() - this->last_read_time_ > this->receive_timeout_; }
 
-bool my_Dsmr::available_within_timeout_() {
+bool Dsmr::available_within_timeout_() {
   // Data are available for reading on the UART bus?
   // Then we can start reading right away.
   if (this->available()) {
@@ -96,7 +96,7 @@ bool my_Dsmr::available_within_timeout_() {
   return false;
 }
 
-void my_Dsmr::start_requesting_data_() {
+void Dsmr::start_requesting_data_() {
   if (!this->requesting_data_) {
     if (this->request_pin_ != nullptr) {
       ESP_LOGV(TAG, "Start requesting data from P1 port");
@@ -109,7 +109,7 @@ void my_Dsmr::start_requesting_data_() {
   }
 }
 
-void my_Dsmr::stop_requesting_data_() {
+void Dsmr::stop_requesting_data_() {
   if (this->requesting_data_) {
     if (this->request_pin_ != nullptr) {
       ESP_LOGV(TAG, "Stop requesting data from P1 port");
@@ -124,7 +124,7 @@ void my_Dsmr::stop_requesting_data_() {
   }
 }
 
-void my_Dsmr::reset_telegram_() {
+void Dsmr::reset_telegram_() {
   this->header_found_ = false;
   this->footer_found_ = false;
   this->bytes_read_ = 0;
@@ -133,7 +133,7 @@ void my_Dsmr::reset_telegram_() {
   this->last_read_time_ = 0;
 }
 
-void my_Dsmr::receive_telegram_() {
+void Dsmr::receive_telegram_() {
   while (this->available_within_timeout_()) {
     const char c = this->read();
 
@@ -187,87 +187,43 @@ void my_Dsmr::receive_telegram_() {
   }
 }
 
-void my_Dsmr::log_telegram()
-{
-  char telegram[3000]={0};
-  for (int i = 0; i < this->crypt_bytes_read_; i++)
-  {
-    telegram[i]=this->crypt_telegram_[i];
-   // telegram[2*i+1] = 
-  }
- // ESP_LOGV(TAG, "Telegram text: %x",telegram);
-}
-
-void my_Dsmr::receive_encrypted_telegram_() {
-  this->reset_telegram_();
-  while (this->available_within_timeout_()) 
-  {
+void Dsmr::receive_encrypted_telegram_() {
+  while (this->available_within_timeout_()) {
     const char c = this->read();
 
-    //loguj kazdy znak
-    //ESP_LOGV(TAG, "Byte read: 0x%x", c);
+    // Find a new telegram start byte.
+    if (!this->header_found_) {
+      if ((uint8_t) c != 0xDB) {
+        continue;
+      }
+      ESP_LOGV(TAG, "Start byte 0xDB of encrypted telegram found");
+      this->reset_telegram_();
+      this->header_found_ = true;
+    }
 
-    //check if encryption flag exists
-    //if ((uint8_t) c == 0xDB) {
-     //    ESP_LOGV(TAG, "Start byte 0xDB of encrypted telegram found");
-   //    }
-
-    //check for header, jak znajdzie to nastepny znak w kolejnej iteracji
-   // if (c == '/') {
-    //  ESP_LOGV(TAG, "Header of telegram found");
-      //this->reset_telegram_();
-  //    this->header_found_ = true;
-  //  }
-  //  if (!this->header_found_)
-  //    continue;
-
-  
-
-    //jesli przeczytal wiecej znakow niz deklarowany telegram to przerwij z bledem
     // Check for buffer overflow.
-   // if (this->crypt_bytes_read_ >= this->max_telegram_len_) {
-  //    this->reset_telegram_();
-   //   ESP_LOGE(TAG, "Error: encrypted telegram larger (%d) than buffer (%d bytes)",this->crypt_bytes_read_, this->max_telegram_len_);
-   //   return;
-  //  }
+    if (this->crypt_bytes_read_ >= this->max_telegram_len_) {
+      this->reset_telegram_();
+      ESP_LOGE(TAG, "Error: encrypted telegram larger than buffer (%d bytes)", this->max_telegram_len_);
+      return;
+    }
 
-    // zapisz znak do tablicy
     // Store the byte in the buffer.
     this->crypt_telegram_[this->crypt_bytes_read_] = c;
     this->crypt_bytes_read_++;
 
-    // //jesli przeczytal wicej niz 20 znakow i nie policzyl jeszcze dlugosci ramki to ja policz
-    // // Read the length of the incoming encrypted telegram.
-     if (this->crypt_telegram_len_ == 0 && this->crypt_bytes_read_ > 20) {
-    //   // Complete header + data bytes
-       this->crypt_telegram_len_ = (this->crypt_telegram_[14] << 8 | this->crypt_telegram_[15]);
-       ESP_LOGV(TAG, "Encrypted telegram length: %d bytes", this->crypt_telegram_len_);
-       ESP_LOGV(TAG, "byte 11#: %x ", this->crypt_telegram_[14]);
-       ESP_LOGV(TAG, "byte 12#: %x ", this->crypt_telegram_[15]);
-    //   // if (this->crypt_telegram_len_ > 10000)
-    //   // {
-    //   //   ESP_LOGV(TAG, "telegram too long: %d bytes, reseting telegram", this->crypt_telegram_len_);
-    //   //   for(int i = 0; i< this->crypt_bytes_read_; i++)
-    //   //   {
-    //   //     ESP_LOGV(TAG, "telegram byte %d: %x", i, this->crypt_telegram_[i]);
-    //   //   }
-    //   //   //log whole telegram
-    //   //   //log_telegram();
-    //   //   this->reset_telegram_();
-    //   // }
-     }
+    // Read the length of the incoming encrypted telegram.
+    if (this->crypt_telegram_len_ == 0 && this->crypt_bytes_read_ > 20) {
+      // Complete header + data bytes
+      this->crypt_telegram_len_ = 13 + (this->crypt_telegram_[11] << 8 | this->crypt_telegram_[12]);
+      ESP_LOGV(TAG, "Encrypted telegram length: %d bytes", this->crypt_telegram_len_);
+    }
 
-    // jesli nie policzyl jeszcze dlugosci ramki 
-    // lub
-    // jesli ilosc odebranych znakow jest rozna od oblicznoej dlugosci bramki
-    // to kolejna iteracja petli
     // Check for the end of the encrypted telegram.
-     if (this->crypt_telegram_len_ == 0 || (this->crypt_bytes_read_ != this->crypt_telegram_len_) || this->crypt_bytes_read_ < 584) {
-       continue;
-     }
-
-    // //jesli dotarl do tego momentu to ma cala ramke
-    // ESP_LOGV(TAG, "End of encrypted telegram found");
+    if (this->crypt_telegram_len_ == 0 || this->crypt_bytes_read_ != this->crypt_telegram_len_) {
+      continue;
+    }
+    ESP_LOGV(TAG, "End of encrypted telegram found");
 
     // Decrypt the encrypted telegram.
     GCM<AES128> *gcmaes128{new GCM<AES128>()};
@@ -280,7 +236,7 @@ void my_Dsmr::receive_encrypted_telegram_() {
     gcmaes128->setIV(&this->crypt_telegram_[2], iv_size);
     gcmaes128->decrypt(reinterpret_cast<uint8_t *>(this->telegram_),
                        // the ciphertext start at byte 18
-                       &this->crypt_telegram_[16],
+                       &this->crypt_telegram_[18],
                        // cipher size
                        this->crypt_bytes_read_ - 17);
     delete gcmaes128;  // NOLINT(cppcoreguidelines-owning-memory)
@@ -289,14 +245,14 @@ void my_Dsmr::receive_encrypted_telegram_() {
     ESP_LOGV(TAG, "Decrypted telegram size: %d bytes", this->bytes_read_);
     ESP_LOGVV(TAG, "Decrypted telegram: %s", this->telegram_);
 
-     // Parse the decrypted telegram and publish sensor values.
-     this->parse_telegram();
-     this->reset_telegram_();
+    // Parse the decrypted telegram and publish sensor values.
+    this->parse_telegram();
+    this->reset_telegram_();
     return;
   }
 }
 
-bool my_Dsmr::parse_telegram() {
+bool Dsmr::parse_telegram() {
   MyData data;
   ESP_LOGV(TAG, "Trying to parse telegram");
   this->stop_requesting_data_();
@@ -321,8 +277,8 @@ bool my_Dsmr::parse_telegram() {
   }
 }
 
-void my_Dsmr::dump_config() {
-  ESP_LOGCONFIG(TAG, "my_DSMR:");
+void Dsmr::dump_config() {
+  ESP_LOGCONFIG(TAG, "DSMR:");
   ESP_LOGCONFIG(TAG, "  Max telegram length: %d", this->max_telegram_len_);
   ESP_LOGCONFIG(TAG, "  Receive timeout: %.1fs", this->receive_timeout_ / 1e3f);
   if (this->request_pin_ != nullptr) {
@@ -339,8 +295,8 @@ void my_Dsmr::dump_config() {
   DSMR_TEXT_SENSOR_LIST(DSMR_LOG_TEXT_SENSOR, )
 }
 
-void my_Dsmr::set_decryption_key(const std::string &decryption_key) {
-  if (decryption_key.length() == 0) {
+void Dsmr::set_decryption_key(const std::string &decryption_key) {
+  if (decryption_key.empty()) {
     ESP_LOGI(TAG, "Disabling decryption");
     this->decryption_key_.clear();
     if (this->crypt_telegram_ != nullptr) {
@@ -371,7 +327,6 @@ void my_Dsmr::set_decryption_key(const std::string &decryption_key) {
   }
 }
 
-}  // namespace my_dsmr
+}  // namespace dsmr
 }  // namespace esphome
 
-//#endif  // USE_ARDUINO
