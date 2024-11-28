@@ -213,13 +213,14 @@ void my_Dsmr::receive_encrypted_telegram_() {
    //    }
 
     //check for header, jak znajdzie to nastepny znak w kolejnej iteracji
-   // if (c == '/') {
-    //  ESP_LOGV(TAG, "Header of telegram found");
-      //this->reset_telegram_();
+    if (c == '/') 
+    {
+      ESP_LOGV(TAG, "Header of telegram found");
+      this->reset_telegram_();
   //    this->header_found_ = true;
-  //  }
-  //  if (!this->header_found_)
-  //    continue;
+    }
+    if (!this->header_found_)
+      continue;
 
   
 
