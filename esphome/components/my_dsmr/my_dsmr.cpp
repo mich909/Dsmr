@@ -199,95 +199,97 @@ void my_Dsmr::log_telegram()
 }
 
 void my_Dsmr::receive_encrypted_telegram_() {
-  while (this->available_within_timeout_()) {
+  this->reset_telegram_();
+  while (this->available_within_timeout_()) 
+  {
     const char c = this->read();
 
     //loguj kazdy znak
     //ESP_LOGV(TAG, "Byte read: 0x%x", c);
 
     //check if encryption flag exists
-    if ((uint8_t) c == 0xDB) {
-         ESP_LOGV(TAG, "Start byte 0xDB of encrypted telegram found");
-       }
+    //if ((uint8_t) c == 0xDB) {
+     //    ESP_LOGV(TAG, "Start byte 0xDB of encrypted telegram found");
+   //    }
 
     //check for header, jak znajdzie to nastepny znak w kolejnej iteracji
-    if (c == '/') {
-      ESP_LOGV(TAG, "Header of telegram found");
+   // if (c == '/') {
+    //  ESP_LOGV(TAG, "Header of telegram found");
       //this->reset_telegram_();
-      this->header_found_ = true;
-    }
-    if (!this->header_found_)
-      continue;
+  //    this->header_found_ = true;
+  //  }
+  //  if (!this->header_found_)
+  //    continue;
 
   
 
     //jesli przeczytal wiecej znakow niz deklarowany telegram to przerwij z bledem
     // Check for buffer overflow.
-    if (this->crypt_bytes_read_ >= this->max_telegram_len_) {
-      this->reset_telegram_();
-      ESP_LOGE(TAG, "Error: encrypted telegram larger (%d) than buffer (%d bytes)",this->crypt_bytes_read_, this->max_telegram_len_);
-      return;
-    }
+   // if (this->crypt_bytes_read_ >= this->max_telegram_len_) {
+  //    this->reset_telegram_();
+   //   ESP_LOGE(TAG, "Error: encrypted telegram larger (%d) than buffer (%d bytes)",this->crypt_bytes_read_, this->max_telegram_len_);
+   //   return;
+  //  }
 
     // zapisz znak do tablicy
     // Store the byte in the buffer.
     this->crypt_telegram_[this->crypt_bytes_read_] = c;
     this->crypt_bytes_read_++;
 
-    //jesli przeczytal wicej niz 20 znakow i nie policzyl jeszcze dlugosci ramki to ja policz
-    // Read the length of the incoming encrypted telegram.
-    if (this->crypt_telegram_len_ == 0 && this->crypt_bytes_read_ > 20) {
-      // Complete header + data bytes
-      this->crypt_telegram_len_ = 13 + (this->crypt_telegram_[11] << 8 | this->crypt_telegram_[12]);
-      ESP_LOGV(TAG, "Encrypted telegram length: %d bytes", this->crypt_telegram_len_);
-      // if (this->crypt_telegram_len_ > 10000)
-      // {
-      //   ESP_LOGV(TAG, "telegram too long: %d bytes, reseting telegram", this->crypt_telegram_len_);
-      //   for(int i = 0; i< this->crypt_bytes_read_; i++)
-      //   {
-      //     ESP_LOGV(TAG, "telegram byte %d: %x", i, this->crypt_telegram_[i]);
-      //   }
-      //   //log whole telegram
-      //   //log_telegram();
-      //   this->reset_telegram_();
-      // }
-    }
+    // //jesli przeczytal wicej niz 20 znakow i nie policzyl jeszcze dlugosci ramki to ja policz
+    // // Read the length of the incoming encrypted telegram.
+    // if (this->crypt_telegram_len_ == 0 && this->crypt_bytes_read_ > 20) {
+    //   // Complete header + data bytes
+    //   this->crypt_telegram_len_ = 13 + (this->crypt_telegram_[11] << 8 | this->crypt_telegram_[12]);
+    //   ESP_LOGV(TAG, "Encrypted telegram length: %d bytes", this->crypt_telegram_len_);
+    //   // if (this->crypt_telegram_len_ > 10000)
+    //   // {
+    //   //   ESP_LOGV(TAG, "telegram too long: %d bytes, reseting telegram", this->crypt_telegram_len_);
+    //   //   for(int i = 0; i< this->crypt_bytes_read_; i++)
+    //   //   {
+    //   //     ESP_LOGV(TAG, "telegram byte %d: %x", i, this->crypt_telegram_[i]);
+    //   //   }
+    //   //   //log whole telegram
+    //   //   //log_telegram();
+    //   //   this->reset_telegram_();
+    //   // }
+    // }
 
     // jesli nie policzyl jeszcze dlugosci ramki 
     // lub
     // jesli ilosc odebranych znakow jest rozna od oblicznoej dlugosci bramki
     // to kolejna iteracja petli
     // Check for the end of the encrypted telegram.
-    if (this->crypt_telegram_len_ == 0 || this->crypt_bytes_read_ != this->crypt_telegram_len_) {
-      continue;
-    }
+    // if (this->crypt_telegram_len_ == 0 || this->crypt_bytes_read_ != this->crypt_telegram_len_) {
+    //   continue;
+    // }
 
-    //jesli dotarl do tego momentu to ma cala ramke
-    ESP_LOGV(TAG, "End of encrypted telegram found");
+    // //jesli dotarl do tego momentu to ma cala ramke
+    // ESP_LOGV(TAG, "End of encrypted telegram found");
 
-    // Decrypt the encrypted telegram.
-    GCM<AES128> *gcmaes128{new GCM<AES128>()};
-    gcmaes128->setKey(this->decryption_key_.data(), gcmaes128->keySize());
-    // the iv is 8 bytes of the system title + 4 bytes frame counter
-    // system title is at byte 2 and frame counter at byte 15
-    for (int i = 10; i < 14; i++)
-      this->crypt_telegram_[i] = this->crypt_telegram_[i + 4];
-    constexpr uint16_t iv_size{12};
-    gcmaes128->setIV(&this->crypt_telegram_[2], iv_size);
-    gcmaes128->decrypt(reinterpret_cast<uint8_t *>(this->telegram_),
-                       // the ciphertext start at byte 18
-                       &this->crypt_telegram_[18],
-                       // cipher size
-                       this->crypt_bytes_read_ - 17);
-    delete gcmaes128;  // NOLINT(cppcoreguidelines-owning-memory)
+    // // Decrypt the encrypted telegram.
+    // GCM<AES128> *gcmaes128{new GCM<AES128>()};
+    // gcmaes128->setKey(this->decryption_key_.data(), gcmaes128->keySize());
+    // // the iv is 8 bytes of the system title + 4 bytes frame counter
+    // // system title is at byte 2 and frame counter at byte 15
+    // for (int i = 10; i < 14; i++)
+    //   this->crypt_telegram_[i] = this->crypt_telegram_[i + 4];
+    // constexpr uint16_t iv_size{12};
+    // gcmaes128->setIV(&this->crypt_telegram_[2], iv_size);
+    // gcmaes128->decrypt(reinterpret_cast<uint8_t *>(this->telegram_),
+    //                    // the ciphertext start at byte 18
+    //                    &this->crypt_telegram_[18],
+    //                    // cipher size
+    //                    this->crypt_bytes_read_ - 17);
+    // delete gcmaes128;  // NOLINT(cppcoreguidelines-owning-memory)
 
-    this->bytes_read_ = strnlen(this->telegram_, this->max_telegram_len_);
-    ESP_LOGV(TAG, "Decrypted telegram size: %d bytes", this->bytes_read_);
-    ESP_LOGVV(TAG, "Decrypted telegram: %s", this->telegram_);
+    // this->bytes_read_ = strnlen(this->telegram_, this->max_telegram_len_);
+    // ESP_LOGV(TAG, "Decrypted telegram size: %d bytes", this->bytes_read_);
+    // ESP_LOGVV(TAG, "Decrypted telegram: %s", this->telegram_);
 
-    // Parse the decrypted telegram and publish sensor values.
-    this->parse_telegram();
-    this->reset_telegram_();
+    // // Parse the decrypted telegram and publish sensor values.
+    // this->parse_telegram();
+    // this->reset_telegram_();
     return;
   }
 }
