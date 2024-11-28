@@ -243,8 +243,8 @@ void my_Dsmr::receive_encrypted_telegram_() {
     //   // Complete header + data bytes
        this->crypt_telegram_len_ = (this->crypt_telegram_[14] << 8 | this->crypt_telegram_[15]);
        ESP_LOGV(TAG, "Encrypted telegram length: %d bytes", this->crypt_telegram_len_);
-       ESP_LOGV(TAG, "byte 14#: %u ", this->crypt_telegram_[14]);
-       ESP_LOGV(TAG, "byte 15#: %u ", this->crypt_telegram_[15]);
+       ESP_LOGV(TAG, "byte 14#: %x ", this->crypt_telegram_[14]);
+       ESP_LOGV(TAG, "byte 15#: %x ", this->crypt_telegram_[15]);
     //   // if (this->crypt_telegram_len_ > 10000)
     //   // {
     //   //   ESP_LOGV(TAG, "telegram too long: %d bytes, reseting telegram", this->crypt_telegram_len_);
